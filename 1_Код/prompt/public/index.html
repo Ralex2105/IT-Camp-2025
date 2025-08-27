@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация</title>
+    <link rel="stylesheet" href="loginstyle.css">
+</head>
+<body>
+    <div class="error-message" id="errorMessage">
+        ❌ Неверный логин или пароль
+    </div>
+
+    <div class="auth-container">
+        <h1>Авторизация</h1>
+        <p class="subtitle">Используйте ваши доменные данные в формате Домен\имя пользователя:</p>
+
+        <form id="authForm" class="auth-form" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label for="login">Введите логин</label>
+                <input type="text" id="login" placeholder="Логин" required>
+            </div>
+
+            <div class="input-group password-group">
+                <label for="password">Введите пароль</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="password" placeholder="Пароль" required>
+                    <span class="eye-icon" onclick="togglePassword()">👁️</span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn primary" id="goHome">Войти</button>
+        
+        </form>
+    </div>
+
+    <footer class="footer">
+        IT CAMP 2025 team: "PROMT"
+    </footer>
+
+    <script>
+        // Заданные учетные данные
+        const validLogin = "test.test@it.camp.ru";
+        const validPassword = "password123";
+
+        // Переключение видимости пароля
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            const eyeIcon = document.querySelector(".eye-icon");
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeIcon.textContent = "🙈";
+            } else {
+                passwordInput.type = "password";
+                eyeIcon.textContent = "👁️";
+            }
+        }
+
+        // Обработка входа
+        function handleLogin(event) {
+            event.preventDefault(); // Предотвращаем перезагрузку страницы
+
+            const loginInput = document.getElementById("login").value;
+            const passwordInput = document.getElementById("password").value;
+            const errorMessage = document.getElementById("errorMessage");
+
+            // Проверка учетных данных
+            if (loginInput === validLogin && passwordInput === validPassword) {
+    
+              
+                document.getElementById("goHome").addEventListener("click", function() {
+                    window.location.href = "home.html"
+                }
+            );
+    
+            } else {
+                // Показать сообщение об ошибке
+                errorMessage.classList.remove("hidden");
+                setTimeout(() => {
+                    errorMessage.classList.add("hidden");
+                }, 3000); // Скрыть через 3 секунды
+            }
+        }
+
+        // Скрыть сообщение об ошибке при загрузке страницы
+        document.getElementById("errorMessage").classList.add("hidden");
+    </script>
+</body>
+</html>
