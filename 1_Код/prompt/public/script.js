@@ -269,116 +269,119 @@ async function showCharts(filename, row) {
     // Determine the primary defect (assuming consistent across data)
     const primaryDefect = data[0].defect || 'Unknown';
 
-    // Common dark mode layout settings for Plotly
-    const darkLayout = {
-      paper_bgcolor: '#0E2B8F',
-      plot_bgcolor: '#0E2B8F',
-      font: { color: '#fff' },
-      xaxis: {
-        gridcolor: 'rgba(255,255,255,0.1)',
-        linecolor: '#fff',
-        zerolinecolor: '#fff',
-        title: { font: { color: '#fff' } }
-      },
-      yaxis: {
-        gridcolor: 'rgba(255,255,255,0.1)',
-        linecolor: '#fff',
-        zerolinecolor: '#fff',
-        title: { font: { color: '#fff' } }
-      },
-      legend: { bgcolor: '#0E2B8F', bordercolor: '#fff', font: { color: '#fff' } },
-      title: { font: { color: '#fff' } },
-      autosize: true
-    };
+// Общий светлый layout для Plotly
+const lightLayout = {
+  paper_bgcolor: '#ffffff',    // фон снаружи графика
+  plot_bgcolor: '#ffffff',     // фон области графика
+  font: { color: '#000' },     // общий цвет шрифтов (чёрный)
+  xaxis: {
+    gridcolor: 'rgba(0,0,0,0.1)',
+    linecolor: '#000',
+    zerolinecolor: '#000',
+    title: { font: { color: '#000' } },
+    tickfont: { color: '#000' }
+  },
+  yaxis: {
+    gridcolor: 'rgba(0,0,0,0.1)',
+    linecolor: '#000',
+    zerolinecolor: '#000',
+    title: { font: { color: '#000' } },
+    tickfont: { color: '#000' }
+  },
+  legend: { bgcolor: '#ffffff', bordercolor: '#ccc', font: { color: '#000' } },
+  title: { font: { color: '#000' } },
+  autosize: true
+};
 
-    // Chart 1: Severity Metric (K_value) over Time with threshold lines
-    // Mapping for 'severity' to numbers (placeholder: Low=2, High=5, Unknown=0)
-    const severityMap = { 'Low': 2, 'High': 5, 'Unknown': 0 };
-    const kValues = data.map(row => severityMap[row['severity']] || 0);
-    const traceK = {
-      x: indices,
-      y: kValues,
-      mode: 'lines+markers',
-      name: 'K_value (Severity Metric)',
-      type: 'scatter',
-      line: { color: '#FF4F12', width: 2 }
-    };
+// Chart 1: Severity Metric (K_value) over Time with threshold lines
+const severityMap = { 'Low': 2, 'High': 5, 'Unknown': 0 };
+const kValues = data.map(row => severityMap[row['severity']] || 0);
 
-    // Threshold lines
-    const lowThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 2.0, y1: 2.0, line: { color: '#2ecc71', dash: 'dash', width: 1 }, name: 'Low Threshold' };
-    const medThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 4.0, y1: 4.0, line: { color: '#f1c40f', dash: 'dash', width: 1 }, name: 'Medium Threshold' };
-    const highThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 6.0, y1: 6.0, line: { color: '#FF4F12', dash: 'dash', width: 1 }, name: 'High Threshold' };
+const traceK = {
+  x: indices,
+  y: kValues,
+  mode: 'lines+markers',
+  name: 'K_value (Severity Metric)',
+  type: 'scatter',
+  line: { color: '#FF4F12', width: 2 }
+};
 
-    Plotly.newPlot(chart1.id, [traceK], {
-  ...darkLayout,
-  title: { text: 'Метрика Тяжести (K_value) во Времени', font: { color: '#fff' } },
-  xaxis: { ...(darkLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#fff' } }, type: 'linear', autorange: true, automargin: true },
-  yaxis: { ...(darkLayout.yaxis || {}), title: { text: 'Значение K', font: { color: '#fff' } }, autorange: true, automargin: true },
+// Threshold lines
+const lowThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 2.0, y1: 2.0, line: { color: '#2ecc71', dash: 'dash', width: 1 } };
+const medThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 4.0, y1: 4.0, line: { color: '#f1c40f', dash: 'dash', width: 1 } };
+const highThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 6.0, y1: 6.0, line: { color: '#FF4F12', dash: 'dash', width: 1 } };
+
+Plotly.newPlot(chart1.id, [traceK], {
+  ...lightLayout,
+  title: { text: 'Метрика Тяжести (K_value) во Времени', font: { color: '#000' } },
+  xaxis: { ...(lightLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#000' } } },
+  yaxis: { ...(lightLayout.yaxis || {}), title: { text: 'Значение K', font: { color: '#000' } } },
   shapes: [lowThreshold, medThreshold, highThreshold],
-  margin: { t: 70 },
+  margin: { t: 70 }
 }, {
-      responsive: true,
-      scrollZoom: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
-    });
+  responsive: true,
+  scrollZoom: true,
+  displaylogo: false,
+  modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
+});
 
-    // Chart 2: Bearing Defect Scores over Time
-    const traceF1 = { x: indices, y: data.map(row => parseFloat(row['f1'])), mode: 'lines', name: 'Inner Race Score (f1)', line: { color: primaryDefect === 'Inner Race' ? '#FF4F12' : '#1f77b4', width: primaryDefect === 'Inner Race' ? 3 : 1 } };
-    const traceF2 = { x: indices, y: data.map(row => parseFloat(row['f2'])), mode: 'lines', name: 'Outer Race Score (f2)', line: { color: primaryDefect === 'Outer Race' ? '#FF4F12' : '#2ca02c', width: primaryDefect === 'Outer Race' ? 3 : 1 } };
-    const traceF3 = { x: indices, y: data.map(row => parseFloat(row['f3'])), mode: 'lines', name: 'Ball Score (f3)', line: { color: primaryDefect === 'Ball' ? '#FF4F12' : '#d62728', width: primaryDefect === 'Ball' ? 3 : 1 } };
-    const traceF4 = { x: indices, y: data.map(row => parseFloat(row['f4'])), mode: 'lines', name: 'Cage Score (f4)', line: { color: primaryDefect === 'Cage' ? '#FF4F12' : '#9467bd', width: primaryDefect === 'Cage' ? 3 : 1 } };
+// Chart 2: Bearing Defect Scores over Time
+const traceF1 = { x: indices, y: data.map(row => parseFloat(row['f1'])), mode: 'lines', name: 'Inner Race Score (f1)', line: { color: primaryDefect === 'Inner Race' ? '#FF4F12' : '#1f77b4', width: primaryDefect === 'Inner Race' ? 3 : 1 } };
+const traceF2 = { x: indices, y: data.map(row => parseFloat(row['f2'])), mode: 'lines', name: 'Outer Race Score (f2)', line: { color: primaryDefect === 'Outer Race' ? '#FF4F12' : '#2ca02c', width: primaryDefect === 'Outer Race' ? 3 : 1 } };
+const traceF3 = { x: indices, y: data.map(row => parseFloat(row['f3'])), mode: 'lines', name: 'Ball Score (f3)', line: { color: primaryDefect === 'Ball' ? '#FF4F12' : '#d62728', width: primaryDefect === 'Ball' ? 3 : 1 } };
+const traceF4 = { x: indices, y: data.map(row => parseFloat(row['f4'])), mode: 'lines', name: 'Cage Score (f4)', line: { color: primaryDefect === 'Cage' ? '#FF4F12' : '#9467bd', width: primaryDefect === 'Cage' ? 3 : 1 } };
 
-    const familyThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 0.0, y1: 0.0, line: { color: '#f1c40f', dash: 'dash', width: 1 }, name: 'Detection Threshold' };
+const familyThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 0.0, y1: 0.0, line: { color: '#f1c40f', dash: 'dash', width: 1 } };
 
-    Plotly.newPlot(chart2.id, [traceF1, traceF2, traceF3, traceF4], {
-  ...darkLayout,
-  title: { text: 'Оценки Дефектов Подшипника во Времени', font: { color: '#fff' } },
-  xaxis: { ...(darkLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#fff' } }, type: 'linear', autorange: true, automargin: true },
-  yaxis: { ...(darkLayout.yaxis || {}), title: { text: 'Оценка Дефекта', font: { color: '#fff' } }, autorange: true, automargin: true },
+Plotly.newPlot(chart2.id, [traceF1, traceF2, traceF3, traceF4], {
+  ...lightLayout,
+  title: { text: 'Оценки Дефектов Подшипника во Времени', font: { color: '#000' } },
+  xaxis: { ...(lightLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#000' } } },
+  yaxis: { ...(lightLayout.yaxis || {}), title: { text: 'Оценка Дефекта', font: { color: '#000' } } },
   shapes: [familyThreshold],
-  margin: { t: 70 },
+  margin: { t: 70 }
 }, {
-      responsive: true,
-      scrollZoom: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
-    });
+  responsive: true,
+  scrollZoom: true,
+  displaylogo: false,
+  modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
+});
 
-    // Chart 3: Rotor/Misalignment/Imbalance Related Features
-    const traceF5 = { x: indices, y: data.map(row => parseFloat(row['f5'])), mode: 'lines', name: 'MCSA Shaft Sidebands (f5)', line: { color: ['Rotor', 'Imbalance', 'Misalignment'].includes(primaryDefect) ? '#FF4F12' : '#7f7f7f', width: ['Rotor', 'Imbalance', 'Misalignment'].includes(primaryDefect) ? 3 : 1 } };
-    const traceF26 = { x: indices, y: data.map(row => parseFloat(row['f26'])), mode: 'lines', name: 'Envelope Spectrum Slope (f26)', line: { color: '#2ecc71' } };
+// Chart 3: Rotor/Misalignment/Imbalance Related Features
+const traceF5 = { x: indices, y: data.map(row => parseFloat(row['f5'])), mode: 'lines', name: 'MCSA Shaft Sidebands (f5)', line: { color: ['Rotor', 'Imbalance', 'Misalignment'].includes(primaryDefect) ? '#FF4F12' : '#7f7f7f', width: ['Rotor', 'Imbalance', 'Misalignment'].includes(primaryDefect) ? 3 : 1 } };
+const traceF26 = { x: indices, y: data.map(row => parseFloat(row['f26'])), mode: 'lines', name: 'Envelope Spectrum Slope (f26)', line: { color: '#2ecc71' } };
 
-    const rotorSNRThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 5.0, y1: 5.0, line: { color: '#f1c40f', dash: 'dash', width: 1 }, name: 'Rotor SNR Threshold' };
+const rotorSNRThreshold = { type: 'line', x0: 0, x1: Math.max(...indices), y0: 5.0, y1: 5.0, line: { color: '#f1c40f', dash: 'dash', width: 1 } };
 
-    Plotly.newPlot(chart3.id, [traceF5, traceF26], {
-  ...darkLayout,
-  title: { text: 'Признаки, Связанные с Ротором/Расцентровкой/Дисбалансом', font: { color: '#fff' } },
-  xaxis: { ...(darkLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#fff' } }, type: 'linear', autorange: true, automargin: true },
-  yaxis: { ...(darkLayout.yaxis || {}), title: { text: 'Значение Признака', font: { color: '#fff' } }, autorange: true, automargin: true },
+Plotly.newPlot(chart3.id, [traceF5, traceF26], {
+  ...lightLayout,
+  title: { text: 'Признаки, Связанные с Ротором/Расцентровкой/Дисбалансом', font: { color: '#000' } },
+  xaxis: { ...(lightLayout.xaxis || {}), title: { text: 'Индекс Временного Окна', font: { color: '#000' } } },
+  yaxis: { ...(lightLayout.yaxis || {}), title: { text: 'Значение Признака', font: { color: '#000' } } },
   shapes: [rotorSNRThreshold],
-  margin: { t: 70 },
+  margin: { t: 70 }
 }, {
-      responsive: true,
-      scrollZoom: true,
-      displaylogo: false,
-      modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
-    });
+  responsive: true,
+  scrollZoom: true,
+  displaylogo: false,
+  modeBarButtonsToRemove: ['toImage', 'sendDataToCloud']
+});
 
-    // Update layout on window resize for responsiveness
-    window.addEventListener('resize', () => {
-      Plotly.Plots.resize(chart1.id);
-      Plotly.Plots.resize(chart2.id);
-      Plotly.Plots.resize(chart3.id);
-    });
+// Update layout on window resize for responsiveness
+window.addEventListener('resize', () => {
+  Plotly.Plots.resize(chart1.id);
+  Plotly.Plots.resize(chart2.id);
+  Plotly.Plots.resize(chart3.id);
+});
 
-    currentGraphRow = graphTr;
-    showAlert('Графики построены', 'success');
-  } catch (error) {
-    console.error('showCharts error:', error);
-    hideSpinner();
-    showAlert(`Ошибка при построении графиков: ${error.message}`, 'error');
-  }
+currentGraphRow = graphTr;
+showAlert('Графики построены', 'success');
+} catch (error) {
+  console.error('showCharts error:', error);
+  hideSpinner();
+  showAlert(`Ошибка при построении графиков: ${error.message}`, 'error');
+}
+
 }
 
 async function downloadSummaryFile(filename) {
